@@ -35,67 +35,149 @@ using namespace std;
 using namespace cv;
 using namespace PaddleOCR;
 
-int main(int argc, char **argv) {
-  if (argc < 3) {
+class OCRDetectorClass
+{
+public:
+	OCRDetectorClass();
+	OCRDetectorClass(std::string strConfig);
+	bool Init(std::string strConfig);
+	bool Run(cv::Mat imgMat, std::vector<std::vector<std::vector<int>>> &boxes, std::vector<std::string> &labels);
+	void Free();
+private:
+	DBDetector *det = nullptr;
+	Classifier *cls = nullptr;
+	CRNNRecognizer *rec = nullptr;
+
+};
+extern "C"  _declspec(dllexport) int OCRInit(std::string strConfig);
+extern "C" _declspec(dllexport) int OCRDetector(cv::Mat imgMat, std::vector<std::vector<std::vector<int>>> &boxes, std::vector<std::string> &labels);
+extern "C" _declspec(dllexport) void OCRFree();
+OCRDetectorClass::OCRDetectorClass()
+{
+
+}
+OCRDetectorClass::OCRDetectorClass(std::string strConfig)
+{
+	Config config(strConfig);
+	config.PrintConfigInfo();
+	det = new DBDetector(config.det_model_dir, config.use_gpu, config.gpu_id, config.gpu_mem,
+		config.cpu_math_library_num_threads, config.use_mkldnn,
+		config.use_zero_copy_run, config.max_side_len, config.det_db_thresh,
+		config.det_db_box_thresh, config.det_db_unclip_ratio, config.visualize);
+	//DBDetector det(
+	//	config.det_model_dir, config.use_gpu, config.gpu_id, config.gpu_mem,
+	//	config.cpu_math_library_num_threads, config.use_mkldnn,
+	//	config.use_zero_copy_run, config.max_side_len, config.det_db_thresh,
+	//	config.det_db_box_thresh, config.det_db_unclip_ratio, config.visualize);
+	if (config.use_angle_cls == true) {
+		cls = new Classifier(config.cls_model_dir, config.use_gpu, config.gpu_id,
+			config.gpu_mem, config.cpu_math_library_num_threads,
+			config.use_mkldnn, config.use_zero_copy_run,
+			config.cls_thresh);
+	}
+	rec = new CRNNRecognizer(config.rec_model_dir, config.use_gpu, config.gpu_id,
+		config.gpu_mem, config.cpu_math_library_num_threads,
+		config.use_mkldnn, config.use_zero_copy_run,
+		config.char_list_file);
+	/*CRNNRecognizer rec(config.rec_model_dir, config.use_gpu, config.gpu_id,
+		config.gpu_mem, config.cpu_math_library_num_threads,
+		config.use_mkldnn, config.use_zero_copy_run,
+		config.char_list_file);*/
+}
+bool OCRDetectorClass::Init(std::string strConfig)
+{
+	try
+	{
+		//std::cout << "初始化开始 :" << std::endl;
+		Config config(strConfig);
+		config.PrintConfigInfo();
+		//std::cout << "参数设置成功 :" << std::endl;
+		det = new DBDetector(config.det_model_dir, config.use_gpu, config.gpu_id, config.gpu_mem,
+			config.cpu_math_library_num_threads, config.use_mkldnn,
+			config.use_zero_copy_run, config.max_side_len, config.det_db_thresh,
+			config.det_db_box_thresh, config.det_db_unclip_ratio, config.visualize);
+		//std::cout << "det生成 :" << std::endl;
+		if (config.use_angle_cls == true) {
+			cls = new Classifier(config.cls_model_dir, config.use_gpu, config.gpu_id,
+				config.gpu_mem, config.cpu_math_library_num_threads,
+				config.use_mkldnn, config.use_zero_copy_run,
+				config.cls_thresh);
+			//std::cout << "cls生成 :" << std::endl;
+		}
+		rec = new CRNNRecognizer(config.rec_model_dir, config.use_gpu, config.gpu_id,
+			config.gpu_mem, config.cpu_math_library_num_threads,
+			config.use_mkldnn, config.use_zero_copy_run,
+			config.char_list_file);
+		//std::cout << "rec生成 :" << std::endl;
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+	return true;
+}
+bool OCRDetectorClass::Run(cv::Mat imgMat, std::vector<std::vector<std::vector<int>>> &boxes, std::vector<std::string> &labels)
+{
+	try
+	{
+		//auto start = std::chrono::system_clock::now();
+		//std::cout << "开始 :" << std::endl;
+		det->Run(imgMat, boxes);
+		//std::cout << "执行1:" << std::endl;
+		rec->Run(boxes, imgMat, cls);
+		rec->GetLabel(labels);
+		//std::cout << "执行2 :" << std::endl;
+		//auto end = std::chrono::system_clock::now();
+		/*auto duration =
+			std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		std::cout << "Run time:" << double(duration.count()) *std::chrono::microseconds::period::num / std::chrono::microseconds::period::den << "s" << std::endl;*/
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+	return true;
+}
+void OCRDetectorClass::Free()
+{
+	if (det)
+	{
+		delete det;
+		det = nullptr;
+	}
+	if (cls)
+	{
+		delete cls;
+		cls = nullptr;
+	}
+	if (rec)
+	{
+		delete rec;
+		rec = nullptr;
+	}
+}
+/*int main(int argc, char **argv) */
+OCRDetectorClass* myOcrDetector = new OCRDetectorClass;
+_declspec(dllexport) int OCRInit(std::string strConfig)
+{
+	//std::cout << "进入OCRInit :" << std::endl;
+	myOcrDetector->Init(strConfig);
+	return 0;
+}
+_declspec(dllexport) int OCRDetector(cv::Mat imgMat,  std::vector<std::vector<std::vector<int>>> &boxes, std::vector<std::string> &labels)
+{
+ /* if (argc < 3) {
     std::cerr << "[ERROR] usage: " << argv[0]
               << " configure_filepath image_path\n";
     exit(1);
-  }
-
-  Config config(argv[1]);
-
-  config.PrintConfigInfo();
-
-  std::string img_path(argv[2]);
-
-  cv::Mat srcimg = cv::imread(img_path, cv::IMREAD_COLOR);
-
-  DBDetector det(
-      config.det_model_dir, config.use_gpu, config.gpu_id, config.gpu_mem,
-      config.cpu_math_library_num_threads, config.use_mkldnn,
-      config.use_zero_copy_run, config.max_side_len, config.det_db_thresh,
-      config.det_db_box_thresh, config.det_db_unclip_ratio, config.visualize);
-
-  Classifier *cls = nullptr;
-  if (config.use_angle_cls == true) {
-    cls = new Classifier(config.cls_model_dir, config.use_gpu, config.gpu_id,
-                         config.gpu_mem, config.cpu_math_library_num_threads,
-                         config.use_mkldnn, config.use_zero_copy_run,
-                         config.cls_thresh);
-  }
-
-  CRNNRecognizer rec(config.rec_model_dir, config.use_gpu, config.gpu_id,
-                     config.gpu_mem, config.cpu_math_library_num_threads,
-                     config.use_mkldnn, config.use_zero_copy_run,
-                     config.char_list_file);
-
-#ifdef USE_MKL
-#pragma omp parallel
-  for (auto i = 0; i < 10; i++) {
-    LOG_IF(WARNING,
-           config.cpu_math_library_num_threads != omp_get_num_threads())
-        << "WARNING! MKL is running on " << omp_get_num_threads()
-        << " threads while cpu_math_library_num_threads is set to "
-        << config.cpu_math_library_num_threads
-        << ". Possible reason could be 1. You have set omp_set_num_threads() "
-           "somewhere; 2. MKL is not linked properly";
-  }
-#endif
-
-  auto start = std::chrono::system_clock::now();
-  std::vector<std::vector<std::vector<int>>> boxes;
-  det.Run(srcimg, boxes);
-
-  rec.Run(boxes, srcimg, cls);
-
-  auto end = std::chrono::system_clock::now();
-  auto duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-  std::cout << "花费了"
-            << double(duration.count()) *
-                   std::chrono::microseconds::period::num /
-                   std::chrono::microseconds::period::den
-            << "秒" << std::endl;
-
-  return 0;
+  }*/
+	//std::cout << "进入OCRDetector :" << std::endl;
+	myOcrDetector->Run(imgMat, boxes, labels);
+    return 0;
+}
+_declspec(dllexport) void OCRFree()
+{
+	myOcrDetector->Free();
+	delete myOcrDetector;
+	myOcrDetector = nullptr;
 }

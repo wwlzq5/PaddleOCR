@@ -17,6 +17,15 @@ output/
 *~
 *.vscode
 *.idea
+*.ipdb
+*.pdb
+*.iobj
+*.db
+*.opendb
+*.sdf
+*.suo
+
+*.dll
 
 *.log
 .clang-format
@@ -25,3 +34,13 @@ output/
 build/
 dist/
 paddleocr.egg-info/
+fluid_inference_install_dir/
+doc/
+deploy/cpp_infer/vs2015/Release
+deploy/cpp_infer/vs2015/Debug
+deploy/cpp_infer/vs2015/x64
+deploy/cpp_infer/vs2015/CMakeFiles
+deploy/cpp_infer/vs2015/test/x64
+deploy/cpp_infer/vs2015/test/Release
+deploy/cpp_infer/vs2015/test/Debug
+deploy/cpp_infer/vs2015/ipch

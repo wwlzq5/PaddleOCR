@@ -1,0 +1,9 @@
+1、doc/doc_ch/tree.md 整体目录结构
+2、infer\utility.py下可以设置检测和识别的一些参数
+3、deploy/hubserving\ocr_system\module.py 下面可以测试一些图片
+4、测试之前，Anaconda环境到PaddleOCR根目录下，然后运行“SET PYTHONPATH=.”再执行python文件
+5、cuDnn版本要求7.3以上
+
+C++ window部署：
+cmd执行：
+.\ocr_system.exe D:\4_code\Github\PaddleOCR\deploy\cpp_infer\tools\config.txt D:\4_code\Github\PaddleOCR\doc\test\1.jpg

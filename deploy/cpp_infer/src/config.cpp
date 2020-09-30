@@ -54,11 +54,11 @@ Config::LoadConfig(const std::string &config_path) {
 }
 
 void Config::PrintConfigInfo() {
-  std::cout << "=======Paddle OCR inference config======" << std::endl;
+  //std::cout << "=======Paddle OCR inference config======" << std::endl;
   for (auto iter = config_map_.begin(); iter != config_map_.end(); iter++) {
-    std::cout << iter->first << " : " << iter->second << std::endl;
+    //std::cout << iter->first << " : " << iter->second << std::endl;
   }
-  std::cout << "=======End of Paddle OCR inference config======" << std::endl;
+  //std::cout << "=======End of Paddle OCR inference config======" << std::endl;
 }
 
 } // namespace PaddleOCR

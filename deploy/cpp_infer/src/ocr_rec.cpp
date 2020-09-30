@@ -23,7 +23,7 @@ void CRNNRecognizer::Run(std::vector<std::vector<std::vector<int>>> boxes,
   cv::Mat crop_img;
   cv::Mat resize_img;
 
-  std::cout << "The predicted text is :" << std::endl;
+  //std::cout << "The predicted text is :" << std::endl;
   int index = 0;
   for (int i = boxes.size() - 1; i >= 0; i--) {
     crop_img = GetRotateCropImage(srcimg, boxes[i]);
@@ -72,6 +72,7 @@ void CRNNRecognizer::Run(std::vector<std::vector<std::vector<int>>> boxes,
     output_t->copy_to_cpu(rec_idx.data());
 
     std::vector<int> pred_idx;
+	vecStrCode.clear();
     for (int n = int(rec_idx_lod[0][0]); n < int(rec_idx_lod[0][1]); n++) {
       pred_idx.push_back(int(rec_idx[n]));
     }
@@ -80,9 +81,10 @@ void CRNNRecognizer::Run(std::vector<std::vector<std::vector<int>>> boxes,
       continue;
 
     index += 1;
-    std::cout << index << "\t";
+  //  std::cout << pred_idx.size() << "\t";
     for (int n = 0; n < pred_idx.size(); n++) {
-      std::cout << label_list_[pred_idx[n]];
+     // std::cout << label_list_[pred_idx[n]];
+	  vecStrCode.push_back(label_list_[pred_idx[n]]);
     }
 
     std::vector<float> predict_batch;
@@ -115,7 +117,7 @@ void CRNNRecognizer::Run(std::vector<std::vector<std::vector<int>>> boxes,
       }
     }
     score /= count;
-    std::cout << "\tscore: " << score << std::endl;
+    //std::cout << "\tscore: " << score << std::endl;
   }
 }
 
@@ -203,5 +205,8 @@ cv::Mat CRNNRecognizer::GetRotateCropImage(const cv::Mat &srcimage,
     return dst_img;
   }
 }
-
+void CRNNRecognizer::GetLabel(std::vector<std::string>&vecPredictCode)
+{
+	vecPredictCode = vecStrCode;
+}
 } // namespace PaddleOCR

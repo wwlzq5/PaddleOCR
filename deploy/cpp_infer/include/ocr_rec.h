@@ -59,6 +59,7 @@ public:
 
   void Run(std::vector<std::vector<std::vector<int>>> boxes, cv::Mat &img,
            Classifier *cls);
+  void GetLabel(std::vector<std::string>&vecPredictCode);
 
 private:
   std::shared_ptr<PaddlePredictor> predictor_;
@@ -71,6 +72,7 @@ private:
   bool use_zero_copy_run_ = false;
 
   std::vector<std::string> label_list_;
+  std::vector<std::string> vecStrCode;
 
   std::vector<float> mean_ = {0.5f, 0.5f, 0.5f};
   std::vector<float> scale_ = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
